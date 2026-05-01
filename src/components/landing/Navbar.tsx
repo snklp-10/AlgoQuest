@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Menu, X, Code2, Zap } from "lucide-react";
+import Link from "next/link";
 
 const navLinks = [
   { label: "Features", href: "#features" },
@@ -59,11 +60,15 @@ export default function Navbar() {
             variant="ghost"
             className="text-slate-600 hover:text-blue-600 hover:bg-blue-50"
           >
-            Sign In
+            <Link href="/login">Sign In</Link>
           </Button>
           <Button className="bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-blue-300/50 transition-all duration-200 gap-2">
-            <Zap size={14} />
-            Start Free
+            <Link
+              href="/signup"
+              className="w-full flex items-center  justify-center gap-2"
+            >
+              <Zap size={13} /> Start Free
+            </Link>
           </Button>
         </div>
 
@@ -91,10 +96,12 @@ export default function Navbar() {
           ))}
           <div className="flex gap-2 mt-2 pt-2 border-t border-slate-100">
             <Button variant="outline" className="flex-1 text-sm">
-              Sign In
+              <Link href="/login">Sign In</Link>
             </Button>
             <Button className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-sm gap-1.5">
-              <Zap size={13} /> Start Free
+              <Link href="/signup">
+                <Zap size={13} /> Start Free
+              </Link>
             </Button>
           </div>
         </div>

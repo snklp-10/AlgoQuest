@@ -20,11 +20,15 @@ function generateArray(n = 16) {
 }
 
 function BubbleSortViz() {
-  const [arr, setArr] = useState(generateArray(14));
+  const [arr, setArr] = useState<number[]>([]);
   const [comparing, setComparing] = useState<number[]>([]);
   const [sorted, setSorted] = useState<Set<number>>(new Set());
   const [running, setRunning] = useState(false);
   const stopRef = useRef(false);
+
+  useEffect(() => {
+    setArr(generateArray(14));
+  }, []);
 
   const reset = () => {
     stopRef.current = true;
@@ -38,6 +42,7 @@ function BubbleSortViz() {
   };
 
   const run = async () => {
+    if (arr.length === 0) return; // Wait for array to be generated
     stopRef.current = false;
     setRunning(true);
     setSorted(new Set());
@@ -62,6 +67,10 @@ function BubbleSortViz() {
     setComparing([]);
     setRunning(false);
   };
+
+  if (arr.length === 0) {
+    return <div className="text-sm text-slate-400">Loading...</div>;
+  }
 
   const max = Math.max(...arr);
 
@@ -126,7 +135,7 @@ function BubbleSortViz() {
 function BinarySearchViz() {
   const n = 15;
   const arr = Array.from({ length: n }, (_, i) => (i + 1) * 5);
-  const [target] = useState(() => arr[Math.floor(Math.random() * n)]);
+
   const [low, setLow] = useState<number | null>(null);
   const [high, setHigh] = useState<number | null>(null);
   const [mid, setMid] = useState<number | null>(null);
@@ -134,32 +143,53 @@ function BinarySearchViz() {
   const [running, setRunning] = useState(false);
   const stopRef = useRef(false);
 
+  const [target, setTarget] = useState<number | null>(null);
+
+  // ✅ Generate target ONLY on client (fixes hydration)
+  useEffect(() => {
+    setTarget(arr[Math.floor(Math.random() * n)]);
+  }, []);
+
   const reset = () => {
     stopRef.current = true;
+
     setLow(null);
     setHigh(null);
     setMid(null);
     setFound(null);
     setRunning(false);
+
+    // ✅ regenerate target
+    setTarget(arr[Math.floor(Math.random() * n)]);
+
     setTimeout(() => {
       stopRef.current = false;
     }, 100);
   };
 
   const run = async () => {
+    if (target === null) return; // ✅ safety
+
     stopRef.current = false;
     setRunning(true);
     setFound(null);
+
     let l = 0,
       h = n - 1;
+
     setLow(l);
     setHigh(h);
+
     await new Promise((r) => setTimeout(r, 400));
+
     while (l <= h) {
       if (stopRef.current) return;
+
       const m = Math.floor((l + h) / 2);
       setMid(m);
+
       await new Promise((r) => setTimeout(r, 600));
+
       if (arr[m] === target) {
         setFound(m);
         break;
@@ -170,24 +200,34 @@ function BinarySearchViz() {
         h = m - 1;
         setHigh(h);
       }
+
       await new Promise((r) => setTimeout(r, 400));
     }
+
     setRunning(false);
   };
+
+  // ✅ Prevent hydration mismatch render
+  if (target === null) {
+    return <div className="text-sm text-slate-400">Loading...</div>;
+  }
 
   return (
     <div className="space-y-4">
       <div className="text-sm text-slate-500 mb-1">
         Searching for: <span className="font-bold text-blue-600">{target}</span>
       </div>
+
       <div className="flex gap-1 flex-wrap">
         {arr.map((v, i) => {
-          const isLow = i === low,
-            isHigh = i === high,
-            isMid = i === mid,
-            isFound = i === found;
+          const isLow = i === low;
+          const isHigh = i === high;
+          const isMid = i === mid;
+          const isFound = i === found;
+
           const inRange =
             low !== null && high !== null && i >= low && i <= high;
+
           return (
             <div
               key={i}
@@ -196,13 +236,11 @@ function BinarySearchViz() {
                   ? "bg-emerald-500 text-white scale-110 shadow-lg shadow-emerald-200"
                   : isMid
                     ? "bg-blue-500 text-white scale-105"
-                    : isLow
+                    : isLow || isHigh
                       ? "bg-sky-200 text-sky-800"
-                      : isHigh
-                        ? "bg-sky-200 text-sky-800"
-                        : inRange
-                          ? "bg-blue-50 text-blue-700 border border-blue-200"
-                          : "bg-slate-100 text-slate-400"
+                      : inRange
+                        ? "bg-blue-50 text-blue-700 border border-blue-200"
+                        : "bg-slate-100 text-slate-400"
               }`}
             >
               {v}
@@ -210,6 +248,7 @@ function BinarySearchViz() {
           );
         })}
       </div>
+
       <div className="flex gap-2 mt-2">
         <Button
           size="sm"
@@ -219,6 +258,7 @@ function BinarySearchViz() {
         >
           <Play size={13} /> {running ? "Searching..." : "Search"}
         </Button>
+
         <Button
           size="sm"
           variant="outline"
@@ -228,6 +268,7 @@ function BinarySearchViz() {
           <RotateCcw size={13} />
         </Button>
       </div>
+
       <div className="flex gap-3 flex-wrap text-xs">
         {[
           { color: "bg-blue-500", label: "Mid" },

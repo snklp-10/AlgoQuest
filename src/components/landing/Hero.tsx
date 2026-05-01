@@ -287,9 +287,9 @@ export default function Hero() {
               </Button>
             </div>
 
-            <p className="text-xs text-slate-400">
+            {/* <p className="text-xs text-slate-400">
               No credit card required · 7-day free trial · Cancel anytime
-            </p>
+            </p> */}
           </div>
 
           {/* Right: Viz */}
