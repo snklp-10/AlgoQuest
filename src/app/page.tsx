@@ -1,21 +1,31 @@
+import AIAssistant from "@/components/landing/AIAssistant";
+import CTA from "@/components/landing/CTA";
 import Features from "@/components/landing/Features";
 import Footer from "@/components/landing/Footer";
+import Gamification from "@/components/landing/Gamification";
 import Hero from "@/components/landing/Hero";
 import Navbar from "@/components/landing/Navbar";
 import Roadmap from "@/components/landing/Roadmap";
-import Showcase from "@/components/landing/Showcase";
+import Stats from "@/components/landing/Stats";
 import Testimonials from "@/components/landing/Testimonials";
+import Visualizer from "@/components/landing/Visualizer";
 import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-background text-foreground">
       <Navbar />
-      <Hero />
-      <Features />
-      <Showcase />
-      <Testimonials />
-      <Roadmap />
+      <main>
+        <Hero />
+        <Features />
+        <Visualizer />
+        <Gamification />
+        <AIAssistant />
+        <Roadmap />
+        <Stats />
+        <Testimonials />
+        <CTA />
+      </main>
       <Footer />
     </div>
   );

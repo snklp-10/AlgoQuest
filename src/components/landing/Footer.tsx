@@ -1,70 +1,90 @@
-import { Code2, Heart } from "lucide-react";
-import { GithubAltIcon } from "../icons/codicon-github-alt";
-import { TwitterOutlineIcon } from "../icons/basil-twitter-outline";
-import { LinkedinOutlineIcon } from "../icons/basil-linkedin-outline";
-import { YoutubeIcon } from "../icons/ci-youtube";
+import { Code2 } from "lucide-react";
+import { GithubAltIcon as Github } from "../icons/codicon-github-alt";
+import { TwitterOutlineIcon as Twitter } from "../icons/basil-twitter-outline";
+import { LinkedinOutlineIcon as Linkedin } from "../icons/basil-linkedin-outline";
+import { YoutubeIcon as Youtube } from "../icons/ci-youtube";
 
-const footerLinks = {
-  Product: ["Features", "Pricing", "Roadmap", "Changelog", "API"],
-  Resources: ["Documentation", "Blog", "Tutorials", "Community", "FAQ"],
-  Company: ["About", "Careers", "Press", "Partners", "Contact"],
-  Legal: ["Privacy", "Terms", "Cookie Policy", "GDPR"],
+const links = {
+  Product: [
+    "Features",
+    "Visualizer",
+    "AI Assistant",
+    "Roadmaps",
+    "Leaderboard",
+    "Pricing",
+  ],
+  Resources: [
+    "Documentation",
+    "Blog",
+    "Changelog",
+    "Community",
+    "DSA Handbook",
+  ],
+  Company: ["About", "Careers", "Press", "Contact", "Partners"],
+  Legal: ["Privacy Policy", "Terms of Service", "Cookie Policy"],
 };
 
-const socialLinks = [
-  { icon: GithubAltIcon, href: "#", label: "Github" },
-  { icon: TwitterOutlineIcon, href: "#", label: "Twitter" },
-  { icon: LinkedinOutlineIcon, href: "#", label: "LinkedIn" },
-  { icon: YoutubeIcon, href: "#", label: "YouTube" },
+const socials = [
+  { icon: Twitter, label: "Twitter" },
+  { icon: Github, label: "GitHub" },
+  { icon: Linkedin, label: "LinkedIn" },
+  { icon: Youtube, label: "YouTube" },
 ];
 
 export default function Footer() {
   return (
-    <footer className="relative border-t border-slate-200 bg-slate-50">
-      <div className="max-w-7xl mx-auto px-6 pt-16 pb-8">
-        <div className="grid lg:grid-cols-6 gap-12 mb-16">
+    <footer className="bg-slate-900 text-slate-400">
+      {/* Top wave */}
+      <div className="h-px bg-linear-to-r from-transparent via-blue-500/30 to-transparent" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-16 pb-8">
+        {/* Main grid */}
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-12">
           {/* Brand */}
-          <div className="lg:col-span-2">
-            <a href="#" className="flex items-center gap-2.5 mb-5">
-              <div className="w-9 h-9 rounded-lg bg-linear-to-br from-sky-600 to-emerald-600 flex items-center justify-center">
-                <Code2 className="w-5 h-5 text-white" />
+          <div className="col-span-2">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
+                <Code2 size={17} className="text-white" />
               </div>
-              <span className="text-xl font-bold tracking-tight text-slate-900">
-                Algo<span className="gradient-text">Quest</span>
+              <span className="font-bold text-white text-lg">
+                algo<span className="text-blue-400">mind</span>
               </span>
-            </a>
-            <p className="text-sm text-slate-500 leading-relaxed mb-6 max-w-xs">
-              The gamified platform that makes mastering data structures and
-              algorithms engaging, effective, and fun.
+            </div>
+            <p className="text-sm leading-relaxed mb-5 text-slate-500 max-w-xs">
+              The most visual and engaging way to master data structures and
+              algorithms. Built for engineers who want to learn smarter.
             </p>
             <div className="flex gap-3">
-              {socialLinks.map((social) => (
+              {socials.map((s) => (
                 <a
-                  key={social.label}
-                  href={social.href}
-                  aria-label={social.label}
-                  className="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:border-slate-300 transition-all"
+                  key={s.label}
+                  href="#"
+                  aria-label={s.label}
+                  className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-blue-500 flex items-center justify-center transition-colors duration-200"
                 >
-                  <social.icon className="w-4 h-4" />
+                  <s.icon
+                    size={15}
+                    className="text-slate-400 hover:text-white"
+                  />
                 </a>
               ))}
             </div>
           </div>
 
           {/* Links */}
-          {Object.entries(footerLinks).map(([category, links]) => (
+          {Object.entries(links).map(([category, items]) => (
             <div key={category}>
-              <h4 className="text-sm font-semibold text-slate-900 mb-4 uppercase tracking-wider">
+              <h4 className="font-semibold text-white text-sm mb-4">
                 {category}
               </h4>
               <ul className="space-y-2.5">
-                {links.map((link) => (
-                  <li key={link}>
+                {items.map((item) => (
+                  <li key={item}>
                     <a
                       href="#"
-                      className="text-sm text-slate-500 hover:text-sky-600 transition-colors"
+                      className="text-sm text-slate-500 hover:text-slate-300 transition-colors duration-150"
                     >
-                      {link}
+                      {item}
                     </a>
                   </li>
                 ))}
@@ -74,15 +94,16 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-slate-200 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-slate-400">
-            &copy; {new Date().getFullYear()} AlgoQuest. All rights reserved.
+        <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-slate-600">
+            © 2025 AlgoMind. All rights reserved.
           </p>
-          <p className="text-sm text-slate-400 flex items-center gap-1">
-            Made with{" "}
-            <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" /> for
-            developers everywhere
-          </p>
+          <div className="flex items-center gap-2 text-xs text-slate-600">
+            <span>Made with</span>
+            <span className="text-blue-400 font-semibold">React + Vite</span>
+            <span>·</span>
+            <span>Powered by AI</span>
+          </div>
         </div>
       </div>
     </footer>

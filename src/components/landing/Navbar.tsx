@@ -1,12 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Menu, X, Code2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Menu, X, Code2, Zap } from "lucide-react";
 
 const navLinks = [
   { label: "Features", href: "#features" },
-  { label: "Showcase", href: "#showcase" },
-  { label: "Testimonials", href: "#testimonials" },
-  { label: "Roadmap", href: "#roadmap" },
+  { label: "Visualizer", href: "#visualizer" },
+  { label: "Roadmaps", href: "#roadmaps" },
+  { label: "Leaderboard", href: "#gamification" },
 ];
 
 export default function Navbar() {
@@ -14,98 +16,89 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
+    const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "glass py-3 shadow-lg shadow-slate-200/50"
+          ? "glass shadow-sm shadow-blue-100/50 py-3"
           : "bg-transparent py-5"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-        <a href="#" className="flex items-center gap-2.5 group">
-          <div className="relative w-9 h-9 rounded-lg bg-gradient-to-br from-sky-600 to-emerald-600 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
-            <Code2 className="w-5 h-5 text-white" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
+        {/* Logo */}
+        <a href="#" className="flex items-center gap-2 group">
+          <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-200">
+            <Code2 size={18} className="text-white" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-slate-900">
-            Algo<span className="gradient-text">Quest</span>
+          <span className="font-bold text-lg text-slate-800">
+            algo<span className="text-blue-500">mind</span>
           </span>
         </a>
 
-        <div className="hidden md:flex items-center gap-8">
+        {/* Desktop Nav */}
+        <nav className="hidden md:flex items-center gap-1">
           {navLinks.map((link) => (
             <a
               key={link.label}
               href={link.href}
-              className="nav-link text-sm font-medium text-slate-600"
+              className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-all duration-200"
             >
               {link.label}
             </a>
           ))}
-        </div>
+        </nav>
 
-        <div className="hidden md:flex items-center gap-4">
-          <a
-            href="#"
-            className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
+        {/* CTA */}
+        <div className="hidden md:flex items-center gap-3">
+          <Button
+            variant="ghost"
+            className="text-slate-600 hover:text-blue-600 hover:bg-blue-50"
           >
             Sign In
-          </a>
-          <a
-            href="#"
-            className="btn-primary px-5 py-2.5 rounded-lg bg-gradient-to-r from-sky-600 to-emerald-600 text-sm font-semibold text-white"
-          >
+          </Button>
+          <Button className="bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-blue-300/50 transition-all duration-200 gap-2">
+            <Zap size={14} />
             Start Free
-          </a>
+          </Button>
         </div>
 
+        {/* Mobile toggle */}
         <button
+          className="md:hidden p-2 rounded-lg hover:bg-blue-50 text-slate-600 transition-colors"
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden text-slate-600 hover:text-slate-900 transition-colors"
         >
-          {mobileOpen ? (
-            <X className="w-6 h-6" />
-          ) : (
-            <Menu className="w-6 h-6" />
-          )}
+          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
+      {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden glass mt-2 mx-4 rounded-xl p-6 animate-slide-up">
-          <div className="flex flex-col gap-4">
-            {navLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                className="text-slate-600 hover:text-slate-900 transition-colors font-medium"
-              >
-                {link.label}
-              </a>
-            ))}
-            <div className="border-t border-slate-200 pt-4 flex flex-col gap-3">
-              <a
-                href="#"
-                className="text-slate-600 hover:text-slate-900 transition-colors font-medium"
-              >
-                Sign In
-              </a>
-              <a
-                href="#"
-                className="btn-primary px-5 py-2.5 rounded-lg bg-gradient-to-r from-sky-600 to-emerald-600 text-sm font-semibold text-white text-center"
-              >
-                Start Free
-              </a>
-            </div>
+        <div className="md:hidden glass border-t border-blue-100/50 px-4 py-4 flex flex-col gap-1 animate-slide-up">
+          {navLinks.map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              className="px-4 py-3 text-sm font-medium text-slate-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+              onClick={() => setMobileOpen(false)}
+            >
+              {link.label}
+            </a>
+          ))}
+          <div className="flex gap-2 mt-2 pt-2 border-t border-slate-100">
+            <Button variant="outline" className="flex-1 text-sm">
+              Sign In
+            </Button>
+            <Button className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-sm gap-1.5">
+              <Zap size={13} /> Start Free
+            </Button>
           </div>
         </div>
       )}
-    </nav>
+    </header>
   );
 }

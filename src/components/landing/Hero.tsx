@@ -1,365 +1,366 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
-import { ArrowRight, Trophy, Zap, Brain, ChevronRight } from "lucide-react";
-import HashMapWhiteboard from "./Hashmapwhiteboard";
+import { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, Play, Sparkles, TrendingUp, Users } from "lucide-react";
 
-const codeLines = [
-  {
-    num: 1,
-    tokens: [
-      { t: "keyword", v: "function" },
-      { t: "function", v: " twoSum" },
-      { t: "default", v: "(nums, target) {" },
-    ],
-  },
-  {
-    num: 2,
-    tokens: [
-      { t: "default", v: "  " },
-      { t: "keyword", v: "const" },
-      { t: "default", v: " map = " },
-      { t: "keyword", v: "new" },
-      { t: "default", v: " Map();" },
-    ],
-  },
-  {
-    num: 3,
-    tokens: [
-      { t: "default", v: "  " },
-      { t: "keyword", v: "for" },
-      { t: "default", v: " (" },
-      { t: "keyword", v: "let" },
-      { t: "default", v: " i = 0; i < nums." },
-      { t: "function", v: "length" },
-      { t: "default", v: "; i++) {" },
-    ],
-  },
-  {
-    num: 4,
-    tokens: [
-      { t: "default", v: "    " },
-      { t: "keyword", v: "const" },
-      { t: "default", v: " complement = target - nums[i];" },
-    ],
-  },
-  {
-    num: 5,
-    tokens: [
-      { t: "default", v: "    " },
-      { t: "keyword", v: "if" },
-      { t: "default", v: " (map." },
-      { t: "function", v: "has" },
-      { t: "default", v: "(complement))" },
-    ],
-  },
-  {
-    num: 6,
-    tokens: [
-      { t: "default", v: "      " },
-      { t: "keyword", v: "return" },
-      { t: "default", v: " [map." },
-      { t: "function", v: "get" },
-      { t: "default", v: "(complement), i];" },
-    ],
-  },
-  {
-    num: 7,
-    tokens: [
-      { t: "default", v: "    map." },
-      { t: "function", v: "set" },
-      { t: "default", v: "(nums[i], i);" },
-    ],
-  },
-  { num: 8, tokens: [{ t: "default", v: "  }" }] },
-  { num: 9, tokens: [{ t: "default", v: "}" }] },
+interface TreeNode {
+  val: number;
+  x: number;
+  y: number;
+  left?: number;
+  right?: number;
+  highlighted?: boolean;
+  visited?: boolean;
+}
+
+const TREE_NODES: TreeNode[] = [
+  { val: 50, x: 50, y: 10 },
+  { val: 30, x: 28, y: 30 },
+  { val: 70, x: 72, y: 30 },
+  { val: 20, x: 17, y: 52 },
+  { val: 40, x: 39, y: 52 },
+  { val: 60, x: 61, y: 52 },
+  { val: 80, x: 83, y: 52 },
+  { val: 15, x: 10, y: 74 },
+  { val: 25, x: 24, y: 74 },
+  { val: 35, x: 33, y: 74 },
+  { val: 45, x: 45, y: 74 },
 ];
 
-const stats = [
-  {
-    icon: Trophy,
-    label: "Problems Solved",
-    value: "2M+",
-    color: "text-amber-500",
-  },
-  {
-    icon: Zap,
-    label: "Active Learners",
-    value: "150K+",
-    color: "text-sky-600",
-  },
-  {
-    icon: Brain,
-    label: "AI Assists Daily",
-    value: "50K+",
-    color: "text-emerald-600",
-  },
+const EDGES = [
+  [0, 1],
+  [0, 2],
+  [1, 3],
+  [1, 4],
+  [2, 5],
+  [2, 6],
+  [3, 7],
+  [3, 8],
+  [4, 9],
+  [4, 10],
 ];
 
-function Particles() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+const BFS_ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+function TreeVisualizer() {
+  const [highlighted, setHighlighted] = useState<Set<number>>(new Set());
+  const [current, setCurrent] = useState<number | null>(null);
+  const [running, setRunning] = useState(false);
+  const animRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const runBFS = () => {
+    if (running) return;
+    setHighlighted(new Set());
+    setCurrent(null);
+    setRunning(true);
+    const visited = new Set<number>();
+
+    BFS_ORDER.forEach((nodeIdx, step) => {
+      animRef.current = setTimeout(() => {
+        setCurrent(nodeIdx);
+        visited.add(nodeIdx);
+        setHighlighted(new Set(visited));
+        if (step === BFS_ORDER.length - 1) {
+          setTimeout(() => {
+            setCurrent(null);
+            setRunning(false);
+          }, 600);
+        }
+      }, step * 420);
+    });
+  };
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    let animationId: number;
-    const particles: {
-      x: number;
-      y: number;
-      vx: number;
-      vy: number;
-      size: number;
-      opacity: number;
-      color: string;
-    }[] = [];
-
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    resize();
-    window.addEventListener("resize", resize);
-
-    for (let i = 0; i < 50; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: (Math.random() - 0.5) * 0.4,
-        size: Math.random() * 2 + 0.5,
-        opacity: Math.random() * 0.3 + 0.05,
-        color: Math.random() > 0.5 ? "#0284c7" : "#059669",
-      });
-    }
-
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      particles.forEach((p, i) => {
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = p.opacity;
-        ctx.fill();
-
-        particles.slice(i + 1).forEach((p2) => {
-          const dx = p.x - p2.x;
-          const dy = p.y - p2.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 150) {
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = p.color;
-            ctx.globalAlpha = (1 - dist / 150) * 0.08;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-          }
-        });
-      });
-
-      ctx.globalAlpha = 1;
-      animationId = requestAnimationFrame(animate);
-    };
-
-    animate();
+    const t = setTimeout(runBFS, 1200);
     return () => {
-      cancelAnimationFrame(animationId);
-      window.removeEventListener("resize", resize);
+      clearTimeout(t);
+      if (animRef.current) clearTimeout(animRef.current);
     };
   }, []);
 
   return (
-    <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
+    <div className="relative w-full aspect-4/3 max-w-md">
+      <svg
+        viewBox="0 0 100 88"
+        className="w-full h-full"
+        style={{ overflow: "visible" }}
+      >
+        {/* Edges */}
+        {EDGES.map(([from, to], i) => {
+          const a = TREE_NODES[from],
+            b = TREE_NODES[to];
+          const isActive = highlighted.has(from) && highlighted.has(to);
+          return (
+            <line
+              key={i}
+              x1={a.x}
+              y1={a.y + 2.5}
+              x2={b.x}
+              y2={b.y - 2.5}
+              stroke={isActive ? "#3b82f6" : "#cbd5e1"}
+              strokeWidth={isActive ? 0.8 : 0.5}
+              strokeDasharray={isActive ? "0" : "2 1"}
+              className="transition-all duration-300"
+            />
+          );
+        })}
+
+        {/* Nodes */}
+        {TREE_NODES.map((node, i) => {
+          const isHighlighted = highlighted.has(i);
+          const isCurrent = current === i;
+          return (
+            <g key={i} transform={`translate(${node.x}, ${node.y})`}>
+              {isCurrent && (
+                <circle
+                  r="5.5"
+                  fill="none"
+                  stroke="#3b82f6"
+                  strokeWidth="0.5"
+                  opacity="0.5"
+                  style={{ animation: "pulse-glow 1s ease-in-out infinite" }}
+                />
+              )}
+              <circle
+                r="3.8"
+                fill={
+                  isCurrent ? "#2563eb" : isHighlighted ? "#3b82f6" : "#f1f5f9"
+                }
+                stroke={isHighlighted ? "#3b82f6" : "#94a3b8"}
+                strokeWidth="0.4"
+                className="transition-all duration-300 node-circle"
+              />
+              <text
+                textAnchor="middle"
+                dominantBaseline="central"
+                fontSize="2.2"
+                fontWeight="600"
+                fill={isHighlighted ? "white" : "#475569"}
+                className="transition-all duration-300 select-none"
+                style={{ fontFamily: "JetBrains Mono, monospace" }}
+              >
+                {node.val}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+
+      {/* Replay button */}
+      <button
+        onClick={runBFS}
+        disabled={running}
+        className="absolute bottom-2 right-2 flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 text-white text-xs font-semibold rounded-lg shadow hover:bg-blue-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <Play size={11} />
+        {running ? "Running BFS..." : "Replay BFS"}
+      </button>
+
+      {/* Legend */}
+      <div className="absolute top-2 left-2 flex flex-col gap-1">
+        <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+          <span className="w-3 h-3 rounded-full bg-blue-500 inline-block" />
+          Visited
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+          <span className="w-3 h-3 rounded-full bg-slate-100 border border-slate-300 inline-block" />
+          Unvisited
+        </div>
+      </div>
+    </div>
   );
 }
 
+function CodeSnippet() {
+  const lines = [
+    { code: "def bfs(root):", color: "text-blue-400" },
+    { code: "  queue = deque([root])", color: "text-slate-300" },
+    { code: "  visited = []", color: "text-slate-300" },
+    { code: "  while queue:", color: "text-blue-400" },
+    { code: "    node = queue.popleft()", color: "text-emerald-400" },
+    { code: "    visited.append(node.val)", color: "text-slate-300" },
+    { code: "    if node.left:", color: "text-blue-400" },
+    { code: "      queue.append(node.left)", color: "text-slate-400" },
+    { code: "  return visited", color: "text-amber-400" },
+  ];
+
+  return (
+    <div className="rounded-xl bg-slate-900 p-4 font-mono text-xs shadow-2xl border border-slate-700 w-full">
+      <div className="flex items-center gap-1.5 mb-3">
+        <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+        <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+        <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
+        <span className="ml-2 text-slate-500 text-[10px]">solution.py</span>
+      </div>
+      {lines.map((line, i) => (
+        <div
+          key={i}
+          className={`flex items-center gap-3 code-line stagger-${Math.min(i + 1, 8)}`}
+        >
+          <span className="text-slate-600 select-none w-4 text-right">
+            {i + 1}
+          </span>
+          <span className={line.color}>{line.code}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const stats = [
+  { icon: Users, value: "50K+", label: "Learners" },
+  { icon: TrendingUp, value: "200+", label: "Problems" },
+  { icon: Sparkles, value: "98%", label: "Satisfaction" },
+];
+
 export default function Hero() {
-  const [activeLine, setActiveLine] = useState(0);
-  const [showOutput, setShowOutput] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveLine((prev) => {
-        if (prev >= codeLines.length - 1) {
-          setShowOutput(true);
-          clearInterval(interval);
-          return prev;
-        }
-        return prev + 1;
-      });
-    }, 400);
-    return () => clearInterval(interval);
+    const t = setTimeout(() => setVisible(true), 100);
+    return () => clearTimeout(t);
   }, []);
 
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden grid-pattern noise-overlay bg-white">
-      <Particles />
+    <section className="relative min-h-screen flex items-center pt-20 pb-16 overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 hero-grid" />
+      <div className="absolute top-0 right-0 w-150 h-150 bg-blue-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+      <div className="absolute bottom-0 left-0 w-100 h-100 bg-sky-300/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4" />
 
-      {/* Gradient orbs */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-sky-400/15 rounded-full blur-[120px] animate-float" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-emerald-400/15 rounded-full blur-[120px] animate-float-delayed" />
-
-      <div className="relative z-10 max-w-7xl mx-auto px-6 pt-28 pb-20 w-full">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Left: Text content */}
-          <div className="space-y-8">
-            <div className="animate-slide-up">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-50 border border-sky-200 text-sm font-medium text-sky-700 mb-6">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                Now with AI-Powered Hints
-              </div>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 w-full">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Left: Text */}
+          <div
+            className={`space-y-8 transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-full text-blue-600 text-sm font-medium">
+              <Sparkles size={14} />
+              AI-Powered DSA Learning
             </div>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.05] tracking-tight text-slate-900 animate-slide-up delay-100">
-              Master DSA
-              <br />
-              <span className="gradient-text">Like a Game</span>
-              <br />
-              Not a Chore
+            <h1 className="text-5xl sm:text-6xl font-extrabold text-slate-900 leading-[1.1] tracking-tight">
+              Master Algorithms <span className="gradient-text">Visually</span>{" "}
+              & Smartly
             </h1>
 
-            <p className="text-lg text-slate-500 max-w-lg leading-relaxed animate-slide-up delay-200">
-              Turn algorithmic challenges into epic quests. Get AI-powered
-              guidance, compete on leaderboards, and follow personalized
-              roadmaps that adapt to your pace.
+            <p className="text-lg text-slate-500 leading-relaxed max-w-lg">
+              Interactive visualizations, gamified challenges, AI code
+              assistance, and personalized roadmaps — everything you need to
+              crack top tech interviews.
             </p>
 
-            <div className="flex flex-wrap gap-4 animate-slide-up delay-300">
-              <a
-                href="#"
-                className="btn-primary group inline-flex items-center gap-2 px-7 py-4 rounded-xl bg-gradient-to-r from-sky-600 to-emerald-600 text-base font-bold text-white"
-              >
-                Begin Your Quest
-                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-              </a>
-              <a
-                href="#features"
-                className="group inline-flex items-center gap-2 px-7 py-4 rounded-xl bg-white border border-slate-200 text-base font-semibold text-slate-700 hover:border-sky-300 hover:text-sky-700 transition-all shadow-sm"
-              >
-                See How It Works
-                <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-              </a>
-            </div>
-
-            <div className="flex gap-8 pt-4 animate-slide-up delay-500">
-              {stats.map((stat) => (
-                <div key={stat.label} className="flex items-center gap-3">
-                  <stat.icon className={`w-5 h-5 ${stat.color}`} />
+            {/* Stats row */}
+            <div className="flex flex-wrap gap-6">
+              {stats.map((s) => (
+                <div key={s.label} className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                    <s.icon size={15} className="text-blue-500" />
+                  </div>
                   <div>
-                    <div className="text-xl font-bold text-slate-900">
-                      {stat.value}
+                    <div className="font-bold text-slate-800 text-sm">
+                      {s.value}
                     </div>
-                    <div className="text-xs text-slate-400">{stat.label}</div>
+                    <div className="text-xs text-slate-500">{s.label}</div>
                   </div>
                 </div>
               ))}
             </div>
+
+            {/* CTAs */}
+            <div className="flex flex-wrap gap-3">
+              <Button
+                size="lg"
+                className="bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-300/40 hover:shadow-blue-300/60 transition-all duration-200 gap-2 px-6"
+              >
+                Start Learning Free
+                <ArrowRight size={16} />
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-blue-200 text-blue-600 hover:bg-blue-50 gap-2 px-6"
+              >
+                <Play size={16} />
+                Watch Demo
+              </Button>
+            </div>
+
+            <p className="text-xs text-slate-400">
+              No credit card required · 7-day free trial · Cancel anytime
+            </p>
           </div>
 
-          {/* Right: Interactive code terminal */}
-          <div className="relative animate-slide-in-right delay-300">
-            {/* Orbiting elements */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-75 h-75 animate-spin-slow opacity-10">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-sky-500" />
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-emerald-500" />
-              </div>
-            </div>
-
-            {/* XP badge */}
-            <div className="absolute -top-4 -right-4 z-20 animate-float">
-              <div className="px-4 py-2 rounded-xl bg-linear-to-r from-amber-500 to-orange-500 text-white font-bold text-sm shadow-lg shadow-amber-500/20">
-                +250 XP
-              </div>
-            </div>
-
-            {/* Streak badge */}
-            <div className="absolute -top-2 -left-6 z-20 animate-float-delayed">
-              <div className="px-4 py-2 rounded-xl bg-white border border-amber-200 text-amber-600 font-bold text-sm flex items-center gap-1.5 shadow-lg shadow-amber-500/10">
-                <Zap className="w-4 h-4" /> 7 Day Streak
-              </div>
-            </div>
-
-            {/* Whiteboard visualization */}
-            <div className="mb-4 animate-slide-up delay-500">
-              <HashMapWhiteboard activeLine={activeLine} />
-            </div>
-
-            {/* Code terminal */}
-            <div className="code-block shadow-2xl shadow-slate-300/30">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-700/50">
-                <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                <span className="ml-3 text-xs text-slate-400 font-mono">
-                  twoSum.js
-                </span>
-                <div className="ml-auto flex items-center gap-1.5">
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-medium">
-                    Easy
-                  </span>
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-sky-500/20 text-sky-400 font-medium">
-                    Hash Map
-                  </span>
-                </div>
-              </div>
-
-              <div className="p-5 font-mono text-sm leading-7">
-                {codeLines.map((line, i) => (
-                  <div
-                    key={line.num}
-                    className={`flex transition-all duration-300 ${
-                      i <= activeLine ? "opacity-100" : "opacity-20"
-                    } ${i === activeLine ? "bg-sky-500/10 -mx-2 px-2 rounded" : ""}`}
-                  >
-                    <span className="line-number w-8 text-right mr-4 select-none text-xs">
-                      {line.num}
-                    </span>
-                    <span>
-                      {line.tokens.map((token, j) => (
-                        <span
-                          key={j}
-                          className={
-                            token.t !== "default" ? token.t : "text-slate-300"
-                          }
-                        >
-                          {token.v}
-                        </span>
-                      ))}
-                    </span>
+          {/* Right: Viz */}
+          <div
+            className={`relative transition-all duration-700 delay-200 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+          >
+            <div className="relative">
+              {/* Main card */}
+              <div className="glass rounded-2xl p-6 shadow-2xl shadow-blue-200/30 glow-blue border border-blue-100">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="font-semibold text-slate-800 text-sm">
+                      Binary Search Tree
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      BFS Traversal — Level Order
+                    </p>
                   </div>
-                ))}
+                  <Badge className="bg-emerald-50 text-emerald-600 border-emerald-200 text-xs">
+                    Live Demo
+                  </Badge>
+                </div>
+                <TreeVisualizer />
               </div>
 
-              {/* Output */}
+              {/* Floating code card */}
               <div
-                className={`border-t border-slate-700/50 px-5 py-3 transition-all duration-500 ${
-                  showOutput ? "opacity-100" : "opacity-0"
-                }`}
+                className="absolute -bottom-6 -left-6 w-64 animate-float"
+                style={{ animationDelay: "0.5s" }}
               >
-                <div className="flex items-center gap-2 text-xs text-emerald-400 mb-1">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                  Runtime: 0.2ms - Faster than 98.7%
+                <div className="shadow-2xl shadow-slate-900/20 rounded-xl overflow-hidden">
+                  <CodeSnippet />
                 </div>
-                <div className="text-xs text-slate-500 font-mono">
-                  {">"} Output: [0, 1]
+              </div>
+
+              {/* Floating badge: XP earned */}
+              <div
+                className="absolute -top-4 -right-4 glass border border-blue-100 rounded-xl px-3 py-2 shadow-lg animate-float"
+                style={{ animationDelay: "1s" }}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-amber-400 flex items-center justify-center text-xs font-bold text-white">
+                    XP
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-800">
+                      +150 XP
+                    </div>
+                    <div className="text-[10px] text-slate-500">
+                      Tree Traversal
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* AI hint badge */}
+              <div
+                className="absolute top-1/2 -left-8 glass border border-blue-100 rounded-xl px-3 py-2 shadow-lg animate-float"
+                style={{ animationDelay: "1.8s" }}
+              >
+                <div className="flex items-center gap-1.5 text-xs">
+                  <Sparkles size={12} className="text-blue-500" />
+                  <span className="text-slate-700 font-medium">
+                    AI Hint available
+                  </span>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Bottom gradient fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-linear-to-t from-slate-50 to-transparent" />
     </section>
   );
 }

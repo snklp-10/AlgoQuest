@@ -1,186 +1,163 @@
 "use client";
-import { useState } from "react";
-import { useInView } from "../../hooks/useInView";
-import { Star, ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Star, Quote } from "lucide-react";
 
 const testimonials = [
   {
-    name: "Sarah Chen",
-    role: "Software Engineer at Google",
-    avatar: "SC",
-    avatarColor: "from-sky-600 to-cyan-600",
+    name: "Aisha Patel",
+    role: "SWE @ Google",
+    avatar: "AP",
+    avatarColor: "bg-emerald-400",
     rating: 5,
-    text: "AlgoQuest turned my DSA prep from a grind into something I actually looked forward to every day. The streak system kept me consistent, and the AI hints saved me hours of frustration. I cleared Google's interview on my first attempt.",
+    text: "AlgoMind completely changed how I prepared. The visual BST traversals finally made me understand why inorder gives sorted output. Went from 0 to FAANG in 3 months.",
+    company: "Google",
   },
   {
-    name: "Marcus Johnson",
-    role: "Senior Dev at Meta",
-    avatar: "MJ",
-    avatarColor: "from-emerald-600 to-teal-600",
+    name: "Marcus Thompson",
+    role: "Backend Engineer @ Meta",
+    avatar: "MT",
+    avatarColor: "bg-blue-400",
     rating: 5,
-    text: "The personalized roadmap was a game-changer. Instead of randomly solving problems, I had a clear path that targeted my weak areas. The leaderboard competition with my study group kept everyone motivated.",
+    text: "The AI assistant is incredibly smart. When I was stuck on a DP problem at midnight, it didn't just give me the answer — it walked me through the thought process.",
+    company: "Meta",
   },
   {
-    name: "Priya Patel",
-    role: "SDE II at Amazon",
-    avatar: "PP",
-    avatarColor: "from-amber-500 to-orange-500",
+    name: "Yuki Tanaka",
+    role: "Intern @ Amazon",
+    avatar: "YT",
+    avatarColor: "bg-amber-400",
     rating: 5,
-    text: "I went from struggling with medium problems to confidently tackling hards in just 3 months. The AI assistant explains patterns in a way that actually clicks. Best investment for interview prep.",
+    text: "The gamification kept me consistent. I maintained a 60-day streak and solved 150+ problems. The leaderboard made it feel like a game, not a chore.",
+    company: "Amazon",
+  },
+  {
+    name: "Carlos Mendes",
+    role: "SWE @ Stripe",
+    avatar: "CM",
+    avatarColor: "bg-violet-400",
+    rating: 5,
+    text: "The personalized roadmap was spot on. It identified my weakness in graph algorithms early and scheduled them perfectly. Saved me weeks of aimless grinding.",
+    company: "Stripe",
+  },
+  {
+    name: "Priya Nair",
+    role: "Senior SWE @ Netflix",
+    avatar: "PN",
+    avatarColor: "bg-rose-400",
+    rating: 5,
+    text: "Best DSA platform I've tried. The Dijkstra's visualization alone is worth it — watching shortest paths update in real-time makes the algorithm click instantly.",
+    company: "Netflix",
   },
   {
     name: "David Kim",
-    role: "Backend Engineer at Stripe",
+    role: "SWE @ Microsoft",
     avatar: "DK",
-    avatarColor: "from-rose-500 to-pink-500",
+    avatarColor: "bg-sky-400",
     rating: 5,
-    text: "What sets AlgoQuest apart is how it makes you want to practice. The XP system, achievements, and clan competitions create this positive feedback loop. I solved 400+ problems without ever feeling burned out.",
-  },
-  {
-    name: "Elena Rodriguez",
-    role: "ML Engineer at Apple",
-    avatar: "ER",
-    avatarColor: "from-teal-500 to-cyan-500",
-    rating: 5,
-    text: "As someone transitioning from research to engineering, the structured roadmap was invaluable. It identified exactly which DSA topics I needed and built my confidence systematically. Landed at Apple within 6 months.",
+    text: "The code sync feature is brilliant — seeing which line of code corresponds to which step in the visualization saved me hours of debugging my understanding.",
+    company: "Microsoft",
   },
 ];
 
-export default function Testimonials() {
-  const [active, setActive] = useState(0);
-  const { ref, isVisible } = useInView();
+function TestimonialCard({
+  t,
+  index,
+  visible,
+}: {
+  t: (typeof testimonials)[0];
+  index: number;
+  visible: boolean;
+}) {
+  return (
+    <div
+      className={`card-hover rounded-2xl p-6 bg-white border border-slate-100 shadow-sm flex flex-col gap-4 transition-all duration-500 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+      style={{ transitionDelay: `${index * 80}ms` }}
+    >
+      <Quote size={20} className="text-blue-200" />
+      <p className="text-slate-600 text-sm leading-relaxed flex-1">
+        "{t.text}"
+      </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-10 h-10 rounded-full ${t.avatarColor} flex items-center justify-center text-sm font-bold text-white`}
+          >
+            {t.avatar}
+          </div>
+          <div>
+            <div className="font-semibold text-slate-800 text-sm">{t.name}</div>
+            <div className="text-xs text-slate-500">{t.role}</div>
+          </div>
+        </div>
+        <div className="flex gap-0.5">
+          {Array.from({ length: t.rating }).map((_, i) => (
+            <Star key={i} size={12} className="text-amber-400 fill-amber-400" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
-  const next = () => setActive((prev) => (prev + 1) % testimonials.length);
-  const prev = () =>
-    setActive((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+export default function Testimonials() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) setVisible(true);
+      },
+      { threshold: 0.1 },
+    );
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
 
   return (
-    <section
-      id="testimonials"
-      className="relative py-28 overflow-hidden bg-slate-50"
-    >
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-sky-400/5 rounded-full blur-[150px]" />
+    <section className="py-24 bg-slate-50 relative overflow-hidden">
+      <div className="absolute inset-0 hero-grid opacity-50" />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
         <div
           ref={ref}
-          className={`text-center max-w-2xl mx-auto mb-16 transition-all duration-700 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+          className={`text-center mb-16 transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-50 border border-amber-200 text-sm font-medium text-amber-700 mb-6">
-            Community Voices
-          </div>
-          <h2 className="text-4xl sm:text-5xl font-black mb-6 text-slate-900">
-            Loved by
-            <br />
-            <span className="gradient-text">Top Engineers</span>
+          <Badge className="bg-amber-50 text-amber-600 border-amber-200 mb-4">
+            Success Stories
+          </Badge>
+          <h2 className="text-4xl font-extrabold text-slate-900 mb-4">
+            From <span className="gradient-text">Our Community</span>
           </h2>
-          <p className="text-slate-500 text-lg">
-            Hear from developers who transformed their DSA skills with
-            AlgoQuest.
+          <p className="text-slate-500 text-lg max-w-xl mx-auto">
+            Thousands of engineers have used AlgoMind to land their dream jobs
+            at top companies.
           </p>
-        </div>
-
-        {/* Featured testimonial */}
-        <div className="max-w-4xl mx-auto mb-12">
-          <div className="testimonial-card bg-white rounded-2xl p-8 sm:p-10 relative overflow-hidden border border-slate-200/80 shadow-sm">
-            <Quote className="absolute top-6 right-8 w-16 h-16 text-slate-100" />
-
-            <div className="flex items-center gap-4 mb-6">
-              <div
-                className={`w-14 h-14 rounded-xl bg-linear-to-br ${testimonials[active].avatarColor} flex items-center justify-center text-white font-bold text-lg`}
-              >
-                {testimonials[active].avatar}
-              </div>
-              <div>
-                <div className="font-bold text-lg text-slate-900">
-                  {testimonials[active].name}
-                </div>
-                <div className="text-sm text-slate-500">
-                  {testimonials[active].role}
-                </div>
-              </div>
+          <div className="flex items-center justify-center gap-2 mt-4">
+            <div className="flex">
+              {[
+                "bg-emerald-400",
+                "bg-blue-400",
+                "bg-amber-400",
+                "bg-violet-400",
+                "bg-rose-400",
+              ].map((c, i) => (
+                <div
+                  key={i}
+                  className={`w-7 h-7 rounded-full ${c} border-2 border-white -ml-2 first:ml-0`}
+                />
+              ))}
             </div>
-
-            <div className="flex gap-1 mb-5">
-              {Array.from({ length: testimonials[active].rating }).map(
-                (_, i) => (
-                  <Star
-                    key={i}
-                    className="w-4 h-4 fill-amber-400 text-amber-400"
-                  />
-                ),
-              )}
-            </div>
-
-            <p className="text-lg text-slate-600 leading-relaxed mb-8">
-              "{testimonials[active].text}"
-            </p>
-
-            <div className="flex items-center justify-between">
-              <div className="flex gap-2">
-                {testimonials.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setActive(i)}
-                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                      i === active
-                        ? "bg-sky-600 w-8"
-                        : "bg-slate-300 hover:bg-slate-400"
-                    }`}
-                  />
-                ))}
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={prev}
-                  className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:border-slate-300 transition-all"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={next}
-                  className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:border-slate-300 transition-all"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
+            <span className="text-sm text-slate-600 font-medium">
+              50,000+ learners trust AlgoMind
+            </span>
           </div>
         </div>
 
-        {/* Mini testimonial cards */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {testimonials.slice(0, 3).map((t, i) => (
-            <div
-              key={t.name}
-              className={`bg-white rounded-xl p-5 border transition-all duration-700 cursor-pointer hover:border-sky-200 ${
-                i === active
-                  ? "border-sky-300 ring-1 ring-sky-100"
-                  : "border-slate-200/80"
-              } ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-              style={{ transitionDelay: `${(i + 1) * 200}ms` }}
-              onClick={() => setActive(i)}
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div
-                  className={`w-9 h-9 rounded-lg bg-linear-to-br ${t.avatarColor} flex items-center justify-center text-white text-xs font-bold`}
-                >
-                  {t.avatar}
-                </div>
-                <div>
-                  <div className="text-sm font-semibold text-slate-800">
-                    {t.name}
-                  </div>
-                  <div className="text-xs text-slate-400">{t.role}</div>
-                </div>
-              </div>
-              <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">
-                "{t.text}"
-              </p>
-            </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {testimonials.map((t, i) => (
+            <TestimonialCard key={t.name} t={t} index={i} visible={visible} />
           ))}
         </div>
       </div>
