@@ -8,6 +8,13 @@
       "when": 1777614881531,
       "tag": "0000_magical_queen_noir",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777790421502,
+      "tag": "0001_confused_scarlet_spider",
+      "breakpoints": true
     }
   ]
 }

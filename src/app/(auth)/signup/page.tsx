@@ -134,7 +134,7 @@ export default function SignupPage() {
 
     // Supabase may require email confirmation — redirect to a confirmation notice
     // or straight to dashboard if email confirmation is disabled.
-    router.push("/dashboard");
+    router.push("/onboarding");
     router.refresh();
   };
 

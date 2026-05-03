@@ -56,6 +56,59 @@ function allPrerequisitesMet(userId: string) {
 // Queries
 // ---------------------------------------------------------------------------
 
+export async function checkUsernameAvailable(
+  username: string,
+): Promise<boolean> {
+  const [existing] = await db
+    .select({ id: profiles.id })
+    .from(profiles)
+    .where(eq(profiles.username, username))
+    .limit(1);
+  return !existing;
+}
+
+export async function upsertProfile({
+  id,
+  username,
+  skillLevel,
+  goal,
+  preferences,
+}: {
+  id: string;
+  username: string;
+  skillLevel: "beginner" | "intermediate" | "advanced";
+  goal: string;
+  preferences: {
+    target_companies: string[];
+    preferred_languages: string[];
+    weekly_hours: number;
+  };
+}) {
+  const [profile] = await db
+    .insert(profiles)
+    .values({
+      id,
+      username,
+      skillLevel,
+      goal,
+      preferences,
+      xp: 0,
+      streak: 0,
+    })
+    .onConflictDoUpdate({
+      target: profiles.id,
+      set: {
+        username,
+        skillLevel,
+        goal,
+        preferences,
+      },
+    })
+    .returning();
+
+  return profile;
+}
+
 export async function getDashboard(userId: string) {
   const [profile] = await db
     .select()

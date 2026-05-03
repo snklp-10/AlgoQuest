@@ -44,6 +44,8 @@ export const profiles = pgTable("profiles", {
   xp: integer("xp").default(0).notNull(),
   streak: integer("streak").default(0).notNull(),
 
+  preferences: jsonb("preferences"),
+
   lastActiveAt: timestamp("last_active_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
