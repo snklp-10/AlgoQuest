@@ -45,6 +45,7 @@ export const profiles = pgTable("profiles", {
   streak: integer("streak").default(0).notNull(),
 
   preferences: jsonb("preferences"),
+  onboardingCompleted: boolean("onboarding_completed").default(false).notNull(),
 
   lastActiveAt: timestamp("last_active_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -53,35 +54,45 @@ export const profiles = pgTable("profiles", {
 });
 
 // --- CONCEPTS ---
-export const concepts = pgTable("concepts", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  slug: text("slug").unique().notNull(),
-  title: text("title").notNull(),
-  description: text("description"),
-  category: text("category"),
+export const concepts = pgTable(
+  "concepts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    slug: text("slug").unique().notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
 
-  difficulty: difficultyEnum("difficulty"),
+    category: text("category").notNull(),
 
-  xpReward: integer("xp_reward").default(10).notNull(),
+    difficulty: difficultyEnum("difficulty"),
 
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
+    xpReward: integer("xp_reward").default(10).notNull(),
+
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => ({
+    categoryIdx: index("concept_category_idx").on(t.category),
+  }),
+);
 
 // --- CONCEPT GRAPH (FIXED) ---
 export const conceptPrerequisites = pgTable(
   "concept_prerequisites",
   {
-    conceptId: uuid("concept_id").references(() => concepts.id, {
-      onDelete: "cascade",
-    }),
-    prerequisiteId: uuid("prerequisite_id").references(() => concepts.id, {
-      onDelete: "cascade",
-    }),
+    conceptId: uuid("concept_id")
+      .notNull()
+      .references(() => concepts.id, { onDelete: "cascade" }),
+
+    prerequisiteId: uuid("prerequisite_id")
+      .notNull()
+      .references(() => concepts.id, { onDelete: "cascade" }),
   },
   (t) => ({
     pk: primaryKey({ columns: [t.conceptId, t.prerequisiteId] }),
+    conceptIdx: index("cp_concept_idx").on(t.conceptId),
+    prereqIdx: index("cp_prereq_idx").on(t.prerequisiteId),
   }),
 );
 
@@ -205,6 +216,8 @@ export const profilesRelations = relations(profiles, ({ many }) => ({
 export const conceptsRelations = relations(concepts, ({ many }) => ({
   progress: many(userProgress),
   quizAttempts: many(quizAttempts),
+
+  prerequisites: many(conceptPrerequisites),
 }));
 
 export const userProgressRelations = relations(userProgress, ({ one }) => ({
@@ -217,3 +230,17 @@ export const userProgressRelations = relations(userProgress, ({ one }) => ({
     references: [concepts.id],
   }),
 }));
+
+export const conceptPrerequisiteRelations = relations(
+  conceptPrerequisites,
+  ({ one }) => ({
+    concept: one(concepts, {
+      fields: [conceptPrerequisites.conceptId],
+      references: [concepts.id],
+    }),
+    prerequisite: one(concepts, {
+      fields: [conceptPrerequisites.prerequisiteId],
+      references: [concepts.id],
+    }),
+  }),
+);

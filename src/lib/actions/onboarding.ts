@@ -1,10 +1,9 @@
 "use server";
 
-import { db } from "@/lib/db";
-import { profiles } from "@/lib/db/schema";
+import { upsertProfile } from "@/lib/db/queries";
+import { createClient } from "@/lib/supabase/server";
 
 interface SaveOnboardingProfileInput {
-  id: string;
   username: string;
   skillLevel: "beginner" | "intermediate" | "advanced";
   goal: string;
@@ -18,14 +17,22 @@ interface SaveOnboardingProfileInput {
 export async function saveOnboardingProfile(
   input: SaveOnboardingProfileInput,
 ): Promise<void> {
-  const { id, username, skillLevel, goal, preferences } = input;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  await db.insert(profiles).values({
-    id,
+  if (!user) {
+    throw new Error("Unauthorized");
+  }
+
+  const { username, skillLevel, goal, preferences } = input;
+
+  await upsertProfile({
+    id: user.id,
     username,
     skillLevel,
     goal,
     preferences,
-    lastActiveAt: new Date(),
   });
 }

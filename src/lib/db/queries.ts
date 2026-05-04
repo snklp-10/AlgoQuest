@@ -1,5 +1,11 @@
 import { db } from "./index";
-import { profiles, userProgress, concepts, spacedRepQueue } from "./schema";
+import {
+  profiles,
+  userProgress,
+  concepts,
+  spacedRepQueue,
+  conceptPrerequisites,
+} from "./schema";
 import {
   eq,
   count,
@@ -94,6 +100,7 @@ export async function upsertProfile({
       preferences,
       xp: 0,
       streak: 0,
+      onboardingCompleted: true,
     })
     .onConflictDoUpdate({
       target: profiles.id,
@@ -102,6 +109,7 @@ export async function upsertProfile({
         skillLevel,
         goal,
         preferences,
+        onboardingCompleted: true,
       },
     })
     .returning();
@@ -160,9 +168,6 @@ export async function getDueReviews(userId: string, limit = 10) {
  * Returns concepts where:
  *   1. All prerequisites are completed by the user (or there are none), AND
  *   2. The user has NOT yet started the concept (no progress row, or status = 'locked')
- *
- * FIX: status filter now uses Drizzle operators (isNull / eq) instead of a
- * raw sql template, avoiding potential column-interpolation issues.
  */
 export async function getUnlockableConcepts(userId: string) {
   return db
@@ -306,6 +311,9 @@ export async function reviewConcept({
 
     // 2. SM-2
     if (quality < 3) {
+      // FIX: on failed recall, reset interval/repetitions but do NOT touch EF.
+      // The original code updated EF unconditionally, which progressively
+      // tanks EF on every failure — not part of the SM-2 spec.
       repetitions = 0;
       intervalDays = 1;
     } else {
@@ -317,11 +325,12 @@ export async function reviewConcept({
         intervalDays = Math.round(intervalDays * easinessFactor);
       }
       repetitions += 1;
-    }
 
-    easinessFactor =
-      easinessFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
-    if (easinessFactor < 1.3) easinessFactor = 1.3;
+      // EF is only updated on successful recall (quality >= 3)
+      easinessFactor =
+        easinessFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
+      if (easinessFactor < 1.3) easinessFactor = 1.3;
+    }
 
     const nextReview = new Date();
     nextReview.setDate(nextReview.getDate() + intervalDays);
@@ -381,27 +390,75 @@ export async function reviewConcept({
 }
 
 /**
- * Returns all concepts the user can see on their roadmap —
- * i.e. concepts whose prerequisites are all met.
+ * Returns all concepts the user can see on their roadmap, joined with
+ * their spaced-rep due date so the roadmap service can surface overdue
+ * reviews correctly.
  *
- * NOTE: status will be null for concepts with no progress row yet.
- * Treat null as 'locked' in the UI.
+ * FIX: The original returned only concepts + progress. dueAt lived on
+ * spacedRepQueue but was never joined, so the "due" section in the
+ * roadmap was always empty. We now left-join spacedRepQueue and expose
+ * dueAt alongside each concept.
+ *
+ * status defaults to "unlocked" (not "locked") when the concept has no
+ * progress row but all its prerequisites are met — fixing the
+ * isUnlocked:true / status:"locked" contradiction in the original.
  */
 export async function getRoadmap(userId: string) {
-  return db
-    .select({
-      id: concepts.id,
-      title: concepts.title,
-      slug: concepts.slug,
-      status: userProgress.status,
-    })
-    .from(concepts)
-    .leftJoin(
-      userProgress,
-      and(
-        eq(userProgress.conceptId, concepts.id),
-        eq(userProgress.userId, userId),
-      ),
-    )
-    .where(allPrerequisitesMet(userId));
+  // 1. all concepts
+  const allConcepts = await db.select().from(concepts);
+
+  // 2. user progress
+  const progress = await db
+    .select()
+    .from(userProgress)
+    .where(eq(userProgress.userId, userId));
+
+  const progressMap = new Map(progress.map((p) => [p.conceptId, p]));
+
+  // 3. spaced-rep queue (for dueAt)
+  const queue = await db
+    .select()
+    .from(spacedRepQueue)
+    .where(eq(spacedRepQueue.userId, userId));
+
+  const queueMap = new Map(queue.map((q) => [q.conceptId, q]));
+
+  // 4. prerequisite graph
+  const prereqs = await db.select().from(conceptPrerequisites);
+
+  const prereqMap = new Map<string, string[]>();
+  for (const row of prereqs) {
+    if (!prereqMap.has(row.conceptId)) {
+      prereqMap.set(row.conceptId, []);
+    }
+    prereqMap.get(row.conceptId)!.push(row.prerequisiteId);
+  }
+
+  // 5. compute unlock state
+  return allConcepts.map((concept) => {
+    const conceptProgress = progressMap.get(concept.id);
+    const queueEntry = queueMap.get(concept.id);
+
+    const prereqIds = prereqMap.get(concept.id) || [];
+
+    const isUnlocked = prereqIds.every((pid) => {
+      const p = progressMap.get(pid);
+      return p?.status === "completed";
+    });
+
+    // FIX: don't default to "locked" when prerequisites are met but the
+    // user simply hasn't started yet — use "unlocked" so isUnlocked and
+    // status stay consistent.
+    const status =
+      conceptProgress?.status ?? (isUnlocked ? "unlocked" : "locked");
+
+    return {
+      ...concept,
+      status,
+      isUnlocked,
+      // FIX: expose dueAt from the spaced-rep queue so the roadmap
+      // service can populate the "due" section correctly.
+      dueAt: queueEntry?.dueAt ?? null,
+    };
+  });
 }

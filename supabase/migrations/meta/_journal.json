@@ -15,6 +15,13 @@
       "when": 1777790421502,
       "tag": "0001_confused_scarlet_spider",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777874934197,
+      "tag": "0002_brainy_doctor_doom",
+      "breakpoints": true
     }
   ]
 }

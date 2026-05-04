@@ -257,7 +257,6 @@ export default function OnboardingPage() {
     setServerError(null);
     try {
       await saveOnboardingProfile({
-        id: userId,
         username: data.username,
         skillLevel: data.experience_level,
         goal: data.primary_goal,
@@ -267,7 +266,8 @@ export default function OnboardingPage() {
           weekly_hours: data.weekly_hours,
         },
       });
-      router.push("/dashboard");
+
+      router.push("/(dashbaord)/roadmap");
       router.refresh();
     } catch {
       setServerError("Something went wrong. Please try again.");
@@ -615,8 +615,12 @@ export default function OnboardingPage() {
                       >
                         <input
                           type="radio"
-                          value={opt.value}
-                          {...register("weekly_hours", { valueAsNumber: true })}
+                          checked={watched.weekly_hours === opt.value}
+                          onChange={() =>
+                            setValue("weekly_hours", opt.value, {
+                              shouldValidate: true,
+                            })
+                          }
                           className="sr-only"
                         />
                         <div
