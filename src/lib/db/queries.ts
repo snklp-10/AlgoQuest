@@ -170,29 +170,12 @@ export async function getDueReviews(userId: string, limit = 10) {
  *   2. The user has NOT yet started the concept (no progress row, or status = 'locked')
  */
 export async function getUnlockableConcepts(userId: string) {
-  return db
-    .select({
-      id: concepts.id,
-      title: concepts.title,
-      slug: concepts.slug,
-      // null here means no progress row yet — treat as 'locked' in the UI
-      status: userProgress.status,
-    })
-    .from(concepts)
-    .leftJoin(
-      userProgress,
-      and(
-        eq(userProgress.conceptId, concepts.id),
-        eq(userProgress.userId, userId),
-      ),
+  const roadmap = await getRoadmap(userId);
+  return roadmap
+    .filter(
+      (c) => c.isUnlocked && (c.status === "unlocked" || c.status === "locked"),
     )
-    .where(
-      and(
-        allPrerequisitesMet(userId),
-        // Exclude concepts the user has already started or finished
-        or(isNull(userProgress.status), eq(userProgress.status, "locked")),
-      ),
-    );
+    .map(({ id, title, slug, status }) => ({ id, title, slug, status }));
 }
 
 /**
@@ -404,61 +387,43 @@ export async function reviewConcept({
  * isUnlocked:true / status:"locked" contradiction in the original.
  */
 export async function getRoadmap(userId: string) {
-  // 1. all concepts
-  const allConcepts = await db.select().from(concepts);
+  const rows = await db
+    .select({
+      // concept fields
+      id: concepts.id,
+      slug: concepts.slug,
+      title: concepts.title,
+      description: concepts.description,
+      category: concepts.category,
+      difficulty: concepts.difficulty,
+      orderIndex: concepts.orderIndex,
+      xpReward: concepts.xpReward,
+      createdAt: concepts.createdAt,
+      // user-specific fields
+      status: userProgress.status,
+      dueAt: spacedRepQueue.dueAt,
+      isUnlocked: allPrerequisitesMet(userId),
+    })
+    .from(concepts)
+    .leftJoin(
+      userProgress,
+      and(
+        eq(userProgress.conceptId, concepts.id),
+        eq(userProgress.userId, userId),
+      ),
+    )
+    .leftJoin(
+      spacedRepQueue,
+      and(
+        eq(spacedRepQueue.conceptId, concepts.id),
+        eq(spacedRepQueue.userId, userId),
+      ),
+    );
 
-  // 2. user progress
-  const progress = await db
-    .select()
-    .from(userProgress)
-    .where(eq(userProgress.userId, userId));
-
-  const progressMap = new Map(progress.map((p) => [p.conceptId, p]));
-
-  // 3. spaced-rep queue (for dueAt)
-  const queue = await db
-    .select()
-    .from(spacedRepQueue)
-    .where(eq(spacedRepQueue.userId, userId));
-
-  const queueMap = new Map(queue.map((q) => [q.conceptId, q]));
-
-  // 4. prerequisite graph
-  const prereqs = await db.select().from(conceptPrerequisites);
-
-  const prereqMap = new Map<string, string[]>();
-  for (const row of prereqs) {
-    if (!prereqMap.has(row.conceptId)) {
-      prereqMap.set(row.conceptId, []);
-    }
-    prereqMap.get(row.conceptId)!.push(row.prerequisiteId);
-  }
-
-  // 5. compute unlock state
-  return allConcepts.map((concept) => {
-    const conceptProgress = progressMap.get(concept.id);
-    const queueEntry = queueMap.get(concept.id);
-
-    const prereqIds = prereqMap.get(concept.id) || [];
-
-    const isUnlocked = prereqIds.every((pid) => {
-      const p = progressMap.get(pid);
-      return p?.status === "completed";
-    });
-
-    // FIX: don't default to "locked" when prerequisites are met but the
-    // user simply hasn't started yet — use "unlocked" so isUnlocked and
-    // status stay consistent.
-    const status =
-      conceptProgress?.status ?? (isUnlocked ? "unlocked" : "locked");
-
-    return {
-      ...concept,
-      status,
-      isUnlocked,
-      // FIX: expose dueAt from the spaced-rep queue so the roadmap
-      // service can populate the "due" section correctly.
-      dueAt: queueEntry?.dueAt ?? null,
-    };
-  });
+  return rows.map((row) => ({
+    ...row,
+    isUnlocked: Boolean(row.isUnlocked),
+    status: row.status ?? (row.isUnlocked ? "unlocked" : "locked"),
+    dueAt: row.dueAt ?? null,
+  }));
 }

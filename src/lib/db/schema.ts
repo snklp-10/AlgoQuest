@@ -63,10 +63,10 @@ export const concepts = pgTable(
     description: text("description"),
 
     category: text("category").notNull(),
-
     difficulty: difficultyEnum("difficulty"),
 
     xpReward: integer("xp_reward").default(10).notNull(),
+    orderIndex: integer("order_index").default(0).notNull(), // ← add this
 
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
@@ -74,6 +74,7 @@ export const concepts = pgTable(
   },
   (t) => ({
     categoryIdx: index("concept_category_idx").on(t.category),
+    orderIdx: index("concept_order_idx").on(t.orderIndex), // ← add this index too
   }),
 );
 
